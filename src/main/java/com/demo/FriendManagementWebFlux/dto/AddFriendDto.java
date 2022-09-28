@@ -1,5 +1,6 @@
 package com.demo.FriendManagementWebFlux.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,6 +18,7 @@ public interface AddFriendDto {
     class Request {
 
         @NotNull(message = "List email must not be null or empty")
+        @JsonProperty("friends")
         private List<String> friends;
 
     }

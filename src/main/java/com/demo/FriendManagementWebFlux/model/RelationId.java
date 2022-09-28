@@ -10,7 +10,11 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RelationId implements Serializable {
-    Long emailId;
-    Long friendId;
-    String status;
+
+    private Long emailId;
+
+    private Long friendId;
+
+    private String status;
+
 }
