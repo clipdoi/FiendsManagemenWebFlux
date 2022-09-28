@@ -1,6 +1,5 @@
 package com.demo.FriendManagementWebFlux.controller;
 
-import com.demo.FriendManagementWebFlux.exception.DataNotFoundException;
 import com.demo.FriendManagementWebFlux.model.User;
 import com.demo.FriendManagementWebFlux.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +17,7 @@ public class UserController {
     private UserService userService;
 
     @GetMapping("")
-    public Mono<List<User>> findAll() {
+    public Flux<User> findAll() {
         return userService.getAllUsers();
     }
 
