@@ -2,11 +2,13 @@ package com.demo.FriendManagementWebFlux.service;
 
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
 import com.demo.FriendManagementWebFlux.exception.DataNotFoundException;
+import com.demo.FriendManagementWebFlux.exception.InputInvalidException;
 import com.demo.FriendManagementWebFlux.exception.StatusException;
 import com.demo.FriendManagementWebFlux.model.User;
 import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
 import com.demo.FriendManagementWebFlux.repositories.UserRepository;
+import com.demo.FriendManagementWebFlux.utils.RequestValidation;
 import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
 import com.demo.FriendManagementWebFlux.utils.constraints.FriendStatusEnum;
 import lombok.extern.slf4j.Slf4j;
@@ -37,21 +39,22 @@ public class RelationServiceImpl implements RelationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Mono<Boolean> addFriend(@Valid AddFriendDto.Request friendRequest) {
-//        String error = RequestValidation.checkAddAndGetCommonRequest(friendRequest);
-//        if (!error.equals("")) {
-//            throw new InputInvalidException(error);
-//        }
-        return Mono.zip(findByEmail(friendRequest.getFriends().get(0)).map(User::getId),
-                        findByEmail(friendRequest.getFriends().get(1)).map(User::getId))
+        String error = RequestValidation.checkAddAndGetCommonRequest(friendRequest);
+        if (!error.equals("")) {
+            throw new InputInvalidException(error);
+        }
+        return Mono.zip(userRepository.findByEmail(friendRequest.getFriends().get(0)).map(Mono::just).get().map(user -> user.getId()),
+                        userRepository.findByEmail(friendRequest.getFriends().get(0)).map(Mono::just).get().map(user -> user.getId()))
                 .flatMap(data -> {
                     return Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
                             .filter(Optional::isPresent)
                             .map(Optional::get)
+                            .switchIfEmpty(Mono.error(new DataNotFoundException("not have")))
                             .filter(e -> !e.getStatus().contains(FriendStatusEnum.FRIEND.name()))
                             .switchIfEmpty(Mono.error(new StatusException("Two Email have already being friend")))
-                            .filter(e -> !e.getStatus().contains(FriendStatusEnum.BLOCK.name()))
+                            .filter(e -> e.getStatus().contains(FriendStatusEnum.BLOCK.name()))
                             .switchIfEmpty(Mono.error(new StatusException("This email has been blocked !!")))
-                            .doOnNext(relationship -> {
+                            .flatMap(relationship -> {
                                 relationshipRepository.save(UserRelationship.builder()
                                         .emailId(data.getT1())
                                         .friendId(data.getT2())
@@ -60,8 +63,8 @@ public class RelationServiceImpl implements RelationService {
                                         .emailId(data.getT2())
                                         .friendId(data.getT1())
                                         .status(FriendStatusEnum.FRIEND.name()).build());
-//                                return Mono.just(Boolean.TRUE);
-                            }).thenReturn(true);
+                                return Mono.just(Boolean.TRUE);
+                            });
                         }
                 );
         //return Mono.just(Boolean.FALSE);
