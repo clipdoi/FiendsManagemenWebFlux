@@ -5,12 +5,11 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import reactor.core.publisher.Mono;
 
-import javax.validation.constraints.NotNull;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
-public interface AddFriendDto {
+public interface RetrieveFriendsListDto {
 
     @AllArgsConstructor
     @NoArgsConstructor
@@ -18,9 +17,10 @@ public interface AddFriendDto {
     @Data
     class Request {
 
-        @NotNull(message = "List email must not be null or empty")
-        @JsonProperty("friends")
-        private List<String> friends;
+
+        @NotEmpty(message = "Email mustn't be empty or null")
+        @JsonProperty("email")
+        private String email;
 
     }
 
@@ -31,6 +31,8 @@ public interface AddFriendDto {
     class Response {
 
         private Boolean success;
+        private List<String> friends;
+        private int count;
 
     }
 
