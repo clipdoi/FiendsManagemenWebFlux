@@ -21,6 +21,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -90,6 +91,14 @@ public class RelationServiceImpl implements RelationService {
 
     @Override
     public Mono<List<String>> retrieveFriendsList(RetrieveFriendsListDto.Request emailRequest) {
-            return findByEmail(emailRequest.getEmail()).map(user -> userRepository.getListFriendEmails(user.getId()));
+            return findByEmail(emailRequest.getEmail())
+                    .map(user -> userRepository.getListFriendEmails(user.getId()));
+    }
+
+    @Override
+    public Mono<List<String>> getCommonFriends(AddFriendDto.Request friendRequest) {
+        return Mono.zip(Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId),
+                Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId))
+                .map(data -> userRepository.getCommonFriends(data.getT1(), data.getT2()));
     }
 }
