@@ -2,6 +2,7 @@ package com.demo.FriendManagementWebFlux.service;
 
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
 import com.demo.FriendManagementWebFlux.dto.RetrieveFriendsListDto;
+import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
 import com.demo.FriendManagementWebFlux.exception.DataNotFoundException;
 import com.demo.FriendManagementWebFlux.exception.InputInvalidException;
 import com.demo.FriendManagementWebFlux.exception.StatusException;
@@ -49,20 +50,8 @@ public class RelationServiceImpl implements RelationService {
 //            throw new InputInvalidException(error);
 //        }
 
-//        Mono<Long> id1 = Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId);
-//        id1.doOnNext(a -> log.info("id1 :{}", a)).subscribe();
-//        Mono<Long> id2 = Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId);
-//        id2.doOnNext(a -> log.info("id2 :{}", a)).subscribe();
-//          Mono.just(RequestValidation.checkAddAndGetCommonRequest(friendRequest))
-//                  .filter(error -> error.equals(""))
-//                  .doOnError(e -> {
-//                      log.debug("error => {}", e.getMessage());
-//                      Mono.error(new InputInvalidException(e.getMessage()));
-//                  }).subscribe();
-//                .switchIfEmpty()).subscribe();
         return Mono.zip(Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId),
                 Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId))
-//        return Mono.zip(id1, id2)
                 .flatMap(data -> {
                     log.info("data :{} :: {}", data.getT1(), data.getT2());
                      Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
@@ -100,5 +89,79 @@ public class RelationServiceImpl implements RelationService {
         return Mono.zip(Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId),
                 Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId))
                 .map(data -> userRepository.getCommonFriends(data.getT1(), data.getT2()));
+    }
+
+    @Override
+    public Mono<SubscribeAndBlockDto.Response> subscribeTo(SubscribeAndBlockDto.Request subscribeRequest) {
+        return Mono.zip(Mono.just(userRepository.findByEmail(subscribeRequest.getRequester())).filter(Optional::isPresent).map(Optional::get).map(User::getId),
+                Mono.just(userRepository.findByEmail(subscribeRequest.getTarget())).filter(Optional::isPresent).map(Optional::get).map(User::getId))
+                .flatMap(data -> {
+                    log.info("data :{} :: {}", data.getT1(), data.getT2());
+                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                            .filter(Optional::isPresent).map(Optional::get)
+                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.FRIEND.name()))
+                            .switchIfEmpty(Mono.error(new StatusException("Already being friend of this target, no need to subscribe !")))
+                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.BLOCK.name()))
+                            .switchIfEmpty(Mono.error(new StatusException("Target email has been blocked !")))
+                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.SUBSCRIBE.name()))
+                            .switchIfEmpty(Mono.error(new StatusException("Already subscribed to this target email !")))
+                            .subscribe();
+                    return Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                            .filter(relationship -> !relationship.isPresent())
+                            .flatMap(relationship -> {
+                                relationshipRepository.save(UserRelationship.builder()
+                                        .emailId(data.getT1())
+                                        .friendId(data.getT2())
+                                        .status(FriendStatusEnum.SUBSCRIBE.name()).build());
+                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()));
+                });
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Mono<SubscribeAndBlockDto.Response> blockEmail(SubscribeAndBlockDto.Request subscribeRequest) {
+        return Mono.zip(Mono.just(userRepository.findByEmail(subscribeRequest.getRequester())).filter(Optional::isPresent).map(Optional::get).map(User::getId),
+                        Mono.just(userRepository.findByEmail(subscribeRequest.getTarget())).filter(Optional::isPresent).map(Optional::get).map(User::getId))
+                .flatMap(data -> {
+                    log.info("data :{} :: {}", data.getT1(), data.getT2());
+
+                     Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                             .filter(Optional::isPresent).map(Optional::get)
+                             .filter(a -> a.getStatus().contains(FriendStatusEnum.FRIEND.name()))
+                             .log("a")
+                            .flatMap(relationship -> {
+                                relationshipRepository.updateStatusByEmailIdAndFriendId(data.getT1(), data.getT2());
+                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()))
+                             .subscribe();
+
+                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                            .filter(Optional::isPresent).map(Optional::get)
+                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.BLOCK.name()))
+                            .log("b")
+                            .switchIfEmpty(Mono.error(new StatusException("Target email has been blocked !")))
+                            .subscribe();
+
+                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                            .filter(Optional::isPresent).map(Optional::get)
+                            .filter(a -> a.getStatus().contains(FriendStatusEnum.SUBSCRIBE.name()))
+                            .log("c")
+                            .flatMap(relationship -> {
+                                relationshipRepository.updateStatusByEmailIdAndFriendId(data.getT1(), data.getT2());
+                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()))
+                            .subscribe();
+
+                    return Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+                            .filter(relationship -> !relationship.isPresent())
+                            .flatMap(relationship -> {
+                                relationshipRepository.save(UserRelationship.builder()
+                                        .emailId(data.getT1())
+                                        .friendId(data.getT2())
+                                        .status(FriendStatusEnum.BLOCK.name()).build());
+                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()));
+                });
     }
 }

@@ -2,6 +2,7 @@ package com.demo.FriendManagementWebFlux.service;
 
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
 import com.demo.FriendManagementWebFlux.dto.RetrieveFriendsListDto;
+import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
 import com.demo.FriendManagementWebFlux.model.User;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -17,5 +18,9 @@ public interface RelationService {
     Mono<List<String>> retrieveFriendsList(RetrieveFriendsListDto.Request emailRequest);
 
     Mono<List<String>> getCommonFriends(AddFriendDto.Request friendRequest);
+
+    Mono<SubscribeAndBlockDto.Response> subscribeTo(SubscribeAndBlockDto.Request subscribeRequest);
+
+    Mono<SubscribeAndBlockDto.Response> blockEmail(SubscribeAndBlockDto.Request subscribeRequest);
 
 }

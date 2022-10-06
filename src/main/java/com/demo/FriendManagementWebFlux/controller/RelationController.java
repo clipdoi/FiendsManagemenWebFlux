@@ -2,6 +2,7 @@ package com.demo.FriendManagementWebFlux.controller;
 
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
 import com.demo.FriendManagementWebFlux.dto.RetrieveFriendsListDto;
+import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
 import com.demo.FriendManagementWebFlux.model.User;
 import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
@@ -59,4 +60,18 @@ public class RelationController {
                 .count(relationService.getCommonFriends(friendRequest).toProcessor().block().size()).build());
     }
 
+    //to subscribe to update from an email address
+    @PostMapping("/subscribe")
+    public Mono<SubscribeAndBlockDto.Response> subscribeTo(
+            @RequestBody SubscribeAndBlockDto.Request subscribeRequest) {
+        return relationService.subscribeTo(subscribeRequest);
+    }
+
+    //to block updates from an email address
+    @PutMapping("/block")
+    public Mono<SubscribeAndBlockDto.Response> blockEmail(
+            @RequestBody SubscribeAndBlockDto.Request subscribeRequest) {
+        return relationService.blockEmail(subscribeRequest);
+
+    }
 }
