@@ -1,30 +1,28 @@
 package com.demo.FriendManagementWebFlux.service;
 
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
+import com.demo.FriendManagementWebFlux.dto.RetrieveEmailsListReceiveUpdateDto;
 import com.demo.FriendManagementWebFlux.dto.RetrieveFriendsListDto;
 import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
 import com.demo.FriendManagementWebFlux.exception.DataNotFoundException;
-import com.demo.FriendManagementWebFlux.exception.InputInvalidException;
 import com.demo.FriendManagementWebFlux.exception.StatusException;
+import com.demo.FriendManagementWebFlux.model.RelationId;
 import com.demo.FriendManagementWebFlux.model.User;
 import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
 import com.demo.FriendManagementWebFlux.repositories.UserRepository;
-import com.demo.FriendManagementWebFlux.utils.RequestValidation;
+import com.demo.FriendManagementWebFlux.utils.EmailUtils;
 import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
 import com.demo.FriendManagementWebFlux.utils.constraints.FriendStatusEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Service("relationService")
 @Slf4j
@@ -126,32 +124,29 @@ public class RelationServiceImpl implements RelationService {
                 .flatMap(data -> {
                     log.info("data :{} :: {}", data.getT1(), data.getT2());
 
-                     Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
-                             .filter(Optional::isPresent).map(Optional::get)
-                             .filter(a -> a.getStatus().contains(FriendStatusEnum.FRIEND.name()))
-                             .log("a")
-                            .flatMap(relationship -> {
-                                relationshipRepository.updateStatusByEmailIdAndFriendId(data.getT1(), data.getT2());
-                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
-                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()))
-                             .subscribe();
+//                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
+//                            .filter(Optional::isPresent).map(Optional::get)
+//                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.BLOCK.name()))
+//                            .switchIfEmpty(Mono.error(new StatusException("Target email has been blocked !")))
+//                            .subscribe();
 
-                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
-                            .filter(Optional::isPresent).map(Optional::get)
-                            .filter(a -> !a.getStatus().contains(FriendStatusEnum.BLOCK.name()))
-                            .log("b")
-                            .switchIfEmpty(Mono.error(new StatusException("Target email has been blocked !")))
-                            .subscribe();
-
-                    Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
-                            .filter(Optional::isPresent).map(Optional::get)
-                            .filter(a -> a.getStatus().contains(FriendStatusEnum.SUBSCRIBE.name()))
-                            .log("c")
-                            .flatMap(relationship -> {
-                                relationshipRepository.updateStatusByEmailIdAndFriendId(data.getT1(), data.getT2());
+                    Mono.just(relationshipRepository.findById(new RelationId(data.getT1()
+                                    , data.getT2()
+                                    , FriendStatusEnum.FRIEND.name())))
+                            .filter(relationship -> relationship.isPresent())
+                            .flatMap(e -> {
+                                relationshipRepository.updateStatusFriendByEmailIdAndFriendId(data.getT1(), data.getT2());
                                 return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
-                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()))
-                            .subscribe();
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()));
+
+                    Mono.just(relationshipRepository.findById(new RelationId(data.getT1()
+                                    , data.getT2()
+                                    , FriendStatusEnum.SUBSCRIBE.name())))
+                            .filter(relationship -> relationship.isPresent())
+                            .flatMap(e -> {
+                                relationshipRepository.updateStatusSubscribeByEmailIdAndFriendId(data.getT1(), data.getT2());
+                                return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
+                            }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()));
 
                     return Mono.just(relationshipRepository.findByEmailIdAndFriendId(data.getT1(), data.getT2()))
                             .filter(relationship -> !relationship.isPresent())
@@ -162,6 +157,24 @@ public class RelationServiceImpl implements RelationService {
                                         .status(FriendStatusEnum.BLOCK.name()).build());
                                 return Mono.just(SubscribeAndBlockDto.Response.builder().success(true).build());
                             }).switchIfEmpty(Mono.just(SubscribeAndBlockDto.Response.builder().success(false).build()));
+
                 });
     }
+
+    @Override
+    public Mono<Set<String>> retrieveEmails(RetrieveEmailsListReceiveUpdateDto.Request retrieveRequest) {
+        return findByEmail(retrieveRequest.getSender())
+                .filter(user -> user != null)
+                .switchIfEmpty(Mono.error(new DataNotFoundException(ErrorConstraints.EMAIL_NOT_FOUND)))
+                .map(user -> userRepository.getRetrievableEmail(user.getId()))
+                .map(l -> {
+                    Set<String> emailList = EmailUtils.getEmailsFromText(retrieveRequest.getText());
+                    emailList = userRepository.getEmailFromSet(emailList);
+                    emailList.addAll(l);
+                    return emailList;
+                });
+
+    }
+
+
 }
