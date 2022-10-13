@@ -58,8 +58,6 @@ public class UserRepositoryTest {
     public void findByEmail(){
         Optional<User> email = userRepository.findByEmail(emailTest1.getEmail());
 
-//        assertEquals(email.get().getEmail(), emailTest1.getEmail());
-        entityManager.persist(emailTest1);
         assertEquals(email.get().getEmail(), emailTest1.getEmail());
     }
 
