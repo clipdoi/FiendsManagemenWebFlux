@@ -1,0 +1,31 @@
+version: '3.7'
+
+services:
+  postgredb:
+    container_name: dbWebFluxAssignment
+    image: postgres:latest
+    restart: always
+    ports:
+      - "5436:5432"
+    volumes:
+      - ./docker/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - fm-network
+    env_file:
+      - docker/.env
+  app:
+    container_name: api-friendmanagementwebflux
+    restart: unless-stopped
+    build:
+      context: docker
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgredb
+    networks:
+      - fm-network
+
+networks:
+  fm-network:
+    driver: bridge

@@ -17,7 +17,7 @@ public interface RelationService {
 
     Mono<AddFriendDto.Response> addFriend(AddFriendDto.Request friendRequest);
 
-    Mono<List<String>> retrieveFriendsList(RetrieveFriendsListDto.Request emailRequest);
+    Mono<List<String>> getFriendList(RetrieveFriendsListDto.Request emailRequest);
 
     Mono<List<String>> getCommonFriends(AddFriendDto.Request friendRequest);
 
