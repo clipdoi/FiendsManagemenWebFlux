@@ -3,7 +3,7 @@ package com.demo.FriendManagementWebFlux.utils;
 import com.demo.FriendManagementWebFlux.dto.AddFriendDto;
 import com.demo.FriendManagementWebFlux.dto.RetrieveEmailsListReceiveUpdateDto;
 import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
-import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
+import com.demo.FriendManagementWebFlux.utils.common.ErrorConstraints;
 
 public class RequestValidation {
 

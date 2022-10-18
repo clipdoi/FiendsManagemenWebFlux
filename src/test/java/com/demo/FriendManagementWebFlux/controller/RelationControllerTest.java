@@ -56,8 +56,13 @@ public class RelationControllerTest {
         emailRequest.setEmail("hongSon@gmail.com");
 
         List<String> listEmails = Arrays.asList("abcxyz@gmail.com", "example@gmail.com");
+        RetrieveFriendsListDto.Response emailResponse = RetrieveFriendsListDto.Response.builder()
+                .friends(listEmails)
+                .count(listEmails.size())
+                .success(true)
+                .build();
 
-        when(relationService.getFriendList(any(RetrieveFriendsListDto.Request.class))).thenReturn(Mono.just(listEmails));
+        when(relationService.getFriendList(any(RetrieveFriendsListDto.Request.class))).thenReturn(Mono.just(emailResponse));
         webTestClient.post().uri("/api/relation/friends")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(emailRequest), RetrieveFriendsListDto.Request.class)
@@ -76,8 +81,13 @@ public class RelationControllerTest {
         friendRequest.setFriends(Arrays.asList("abcxyz@gmail.com", "example@gmail.com"));
 
         List<String> listEmails = Arrays.asList("example1@gmail.com", "example2@gmail.com");
+        RetrieveFriendsListDto.Response emailResponse = RetrieveFriendsListDto.Response.builder()
+                .friends(listEmails)
+                .count(listEmails.size())
+                .success(true)
+                .build();
 
-        when(relationService.getCommonFriends(any(AddFriendDto.Request.class))).thenReturn(Mono.just(listEmails));
+        when(relationService.getCommonFriends(any(AddFriendDto.Request.class))).thenReturn(Mono.just(emailResponse));
         webTestClient.post().uri("/api/relation/common")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(friendRequest), AddFriendDto.Request.class)
@@ -132,8 +142,12 @@ public class RelationControllerTest {
         listEmails.add("example0@gmail.com");
         listEmails.add("example1@gmail.com");
         listEmails.add("example2@gmail.com");
+        RetrieveEmailsListReceiveUpdateDto.Response emailResponse = RetrieveEmailsListReceiveUpdateDto.Response.builder()
+                .recipients(listEmails)
+                .success(true)
+                .build();
 
-        when(relationService.retrieveEmails(any(RetrieveEmailsListReceiveUpdateDto.Request.class))).thenReturn(Mono.just(listEmails));
+        when(relationService.retrieveEmails(any(RetrieveEmailsListReceiveUpdateDto.Request.class))).thenReturn(Mono.just(emailResponse));
         webTestClient.post().uri("/api/relation/retrieve")
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(Mono.just(request), RetrieveEmailsListReceiveUpdateDto.Request.class)

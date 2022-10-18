@@ -17,7 +17,6 @@ public interface RetrieveFriendsListDto {
     @Data
     class Request {
 
-
         @NotEmpty(message = "Email mustn't be empty or null")
         @JsonProperty("email")
         private String email;

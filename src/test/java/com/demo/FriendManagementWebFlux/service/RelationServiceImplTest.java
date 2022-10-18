@@ -10,25 +10,20 @@ import com.demo.FriendManagementWebFlux.model.User;
 import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
 import com.demo.FriendManagementWebFlux.repositories.UserRepository;
-import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
-import com.demo.FriendManagementWebFlux.utils.constraints.FriendStatusEnum;
-import org.junit.jupiter.api.Assertions;
+import com.demo.FriendManagementWebFlux.utils.common.ErrorConstraints;
+import com.demo.FriendManagementWebFlux.utils.common.FriendStatusEnum;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.context.junit4.SpringRunner;
-import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.util.*;
 
-import static org.assertj.core.api.Assertions.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
@@ -70,7 +65,6 @@ public class RelationServiceImplTest {
 
     @BeforeAll
     public void setUp() throws Exception {
-        MockitoAnnotations.initMocks(this);
         emailRequest = new RetrieveFriendsListDto.Request();
         addCommonRequest = new AddFriendDto.Request();
         subBlockRequest = new SubscribeAndBlockDto.Request();
@@ -111,46 +105,6 @@ public class RelationServiceImplTest {
                 }).verifyComplete();
     }
 
-//    @Test
-//    public void testAddFriendBlockedEmail() {
-//        statusException = new StatusException("This email has been blocked !!");
-//        addCommonRequest = new AddFriendDto.Request(Arrays.asList(emailTest1.getEmail(), emailTest2.getEmail()));
-//
-//        when(userRepository.findByEmail(emailTest1.getEmail()))
-//                .thenReturn(Optional.of(emailTest1));
-//        when(userRepository.findByEmail(emailTest2.getEmail()))
-//                .thenReturn(Optional.of(emailTest2));
-//        when(relationship.findByEmailIdAndFriendId
-//                (emailTest1.getId(), emailTest2.getId()))
-//                .thenReturn(Optional.ofNullable(blockRelationship1));
-//
-////        assertEquals(statusException, assertThrows(StatusException.class
-////                , () -> relationService.addFriend(addCommonRequest)));
-//        assertThatThrownBy(() -> relationService.addFriend(addCommonRequest))
-//                .isInstanceOf(DataNotFoundException.class)
-//                .hasMessage("This email has been blocked !!");
-//        Mockito.verify(userRepository).findByEmail(any(String.class));
-//        Mockito.verify(relationship).findByEmailIdAndFriendId(any(Long.class), any(Long.class));
-//    }
-
-//    @Test
-//    public void testAddFriendOldFriend() {
-//        statusException = new StatusException("Two Email have already being friend");
-//        addCommonRequest = new AddAndGetCommonRequest(Arrays.asList(emailTest1.getEmail(), emailTest2.getEmail()));
-//
-////        when(emailRepository.findByEmail(emailTest1.getEmail()))
-////                .thenReturn(Optional.of(emailTest1));
-////        when(emailRepository.findByEmail(emailTest2.getEmail()))
-////                .thenReturn(Optional.of(emailTest2));
-//        when(relationshipRepository.findByEmailIdAndFriendId
-//                (emailTest1.getEmailId(), emailTest2.getEmailId()))
-//                .thenReturn(Optional.ofNullable(friendRelationship1));
-//
-//        assertEquals(statusException, assertThrows(StatusException.class
-//                , () -> emailService.addFriend(addCommonRequest)));
-//
-//    }
-
     @Test
     public void testGetFriendsSuccess() {
         emailRequest = new RetrieveFriendsListDto.Request(emailTest1.getEmail());
@@ -162,7 +116,7 @@ public class RelationServiceImplTest {
 
         StepVerifier.create(relationService.getFriendList(emailRequest))
                 .consumeNextWith(data -> {
-                    assertEquals(listEmail.size(), data.size());
+                    assertEquals(listEmail.size(), data.getCount());
                 }).verifyComplete();
     }
 
@@ -181,7 +135,7 @@ public class RelationServiceImplTest {
 
         StepVerifier.create(relationService.getCommonFriends(addCommonRequest))
                 .consumeNextWith(data -> {
-                    assertEquals(listEmail.size(), data.size());
+                    assertEquals(listEmail.size(), data.getCount());
                 }).verifyComplete();
 
     }
@@ -226,7 +180,7 @@ public class RelationServiceImplTest {
 
         StepVerifier.create(relationService.retrieveEmails(retrieveRequest))
                 .consumeNextWith(data -> {
-                    assertEquals(new HashSet<>(listEmail), data);
+                    assertEquals(new HashSet<>(listEmail).size(), data.getRecipients().size());
                 }).verifyComplete();
     }
 

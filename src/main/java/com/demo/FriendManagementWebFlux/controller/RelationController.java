@@ -31,8 +31,7 @@ public class RelationController {
     @ResponseStatus(HttpStatus.OK)
     public Mono<RetrieveFriendsListDto.Response> retrieveFriendsList(
              @RequestBody RetrieveFriendsListDto.Request emailRequest) {
-        return relationService.getFriendList(emailRequest)
-                .map(p -> RetrieveFriendsListDto.Response.builder().friends(p).success(true).count(p.size()).build());
+        return relationService.getFriendList(emailRequest);
     }
 
     //retrieve the common friends list between two email addresses
@@ -40,8 +39,7 @@ public class RelationController {
     @ResponseStatus(HttpStatus.OK)
     public Mono<RetrieveFriendsListDto.Response> getCommonFriends(
             @RequestBody AddFriendDto.Request friendRequest) {
-        return relationService.getCommonFriends(friendRequest)
-                .map(p -> RetrieveFriendsListDto.Response.builder().friends(p).count(p.size()).success(true).build());
+        return relationService.getCommonFriends(friendRequest);
     }
 
     //to subscribe to update from an email address
@@ -63,8 +61,6 @@ public class RelationController {
     @PostMapping("/retrieve")
     public Mono<RetrieveEmailsListReceiveUpdateDto.Response> retrieveEmail(
              @RequestBody RetrieveEmailsListReceiveUpdateDto.Request retrieveRequest) {
-        return relationService.retrieveEmails(retrieveRequest)
-                .map(p -> RetrieveEmailsListReceiveUpdateDto.Response.builder().success(true).recipients(
-                        p).build());
+        return relationService.retrieveEmails(retrieveRequest);
     }
 }

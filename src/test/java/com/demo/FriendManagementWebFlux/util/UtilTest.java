@@ -5,7 +5,7 @@ import com.demo.FriendManagementWebFlux.dto.RetrieveEmailsListReceiveUpdateDto;
 import com.demo.FriendManagementWebFlux.dto.SubscribeAndBlockDto;
 import com.demo.FriendManagementWebFlux.utils.EmailUtils;
 import com.demo.FriendManagementWebFlux.utils.RequestValidation;
-import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
+import com.demo.FriendManagementWebFlux.utils.common.ErrorConstraints;
 import lombok.Builder;
 import lombok.Data;
 import org.junit.jupiter.api.Assertions;

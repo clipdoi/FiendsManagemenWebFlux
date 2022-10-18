@@ -1,4 +1,4 @@
-package com.demo.FriendManagementWebFlux.utils.constraints;
+package com.demo.FriendManagementWebFlux.utils.common;
 
 public final class ErrorConstraints {
 

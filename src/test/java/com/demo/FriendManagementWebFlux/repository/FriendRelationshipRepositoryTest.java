@@ -4,7 +4,7 @@ package com.demo.FriendManagementWebFlux.repository;
 import com.demo.FriendManagementWebFlux.model.RelationId;
 import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
-import com.demo.FriendManagementWebFlux.utils.constraints.FriendStatusEnum;
+import com.demo.FriendManagementWebFlux.utils.common.FriendStatusEnum;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -35,7 +35,6 @@ public class FriendRelationshipRepositoryTest {
 
     @BeforeAll
     public void setup(){
-//        userRelationshipId = RelationId.builder().emailId(1L).friendId(2L).build();
         relationTest = UserRelationship.builder().emailId(1L).friendId(3L).status(FriendStatusEnum.FRIEND.name()).build();
         relationTest2 = UserRelationship.builder().emailId(1L).friendId(12L).status(FriendStatusEnum.FRIEND.name()).build();
     }

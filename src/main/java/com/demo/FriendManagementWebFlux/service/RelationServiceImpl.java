@@ -11,8 +11,8 @@ import com.demo.FriendManagementWebFlux.model.UserRelationship;
 import com.demo.FriendManagementWebFlux.repositories.FriendRelationshipRepository;
 import com.demo.FriendManagementWebFlux.repositories.UserRepository;
 import com.demo.FriendManagementWebFlux.utils.EmailUtils;
-import com.demo.FriendManagementWebFlux.utils.constraints.ErrorConstraints;
-import com.demo.FriendManagementWebFlux.utils.constraints.FriendStatusEnum;
+import com.demo.FriendManagementWebFlux.utils.common.ErrorConstraints;
+import com.demo.FriendManagementWebFlux.utils.common.FriendStatusEnum;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
 
 import javax.validation.Valid;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -43,11 +42,6 @@ public class RelationServiceImpl implements RelationService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Mono<AddFriendDto.Response> addFriend(@Valid AddFriendDto.Request friendRequest) {
-//        String error = RequestValidation.checkAddAndGetCommonRequest(friendRequest);
-//        if (!error.equals("")) {
-//            throw new InputInvalidException(error);
-//        }
-
         return Mono.zip(Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId),
                 Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId))
                 .flatMap(data -> {
@@ -77,16 +71,18 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public Mono<List<String>> getFriendList(RetrieveFriendsListDto.Request emailRequest) {
+    public Mono<RetrieveFriendsListDto.Response> getFriendList(RetrieveFriendsListDto.Request emailRequest) {
             return findByEmail(emailRequest.getEmail())
-                    .map(user -> userRepository.getListFriendEmails(user.getId()));
+                    .map(user -> userRepository.getListFriendEmails(user.getId()))
+                    .map(p -> RetrieveFriendsListDto.Response.builder().friends(p).success(true).count(p.size()).build());
     }
 
     @Override
-    public Mono<List<String>> getCommonFriends(AddFriendDto.Request friendRequest) {
+    public Mono<RetrieveFriendsListDto.Response> getCommonFriends(AddFriendDto.Request friendRequest) {
         return Mono.zip(Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(0))).filter(Optional::isPresent).map(Optional::get).map(User::getId),
                 Mono.just(userRepository.findByEmail(friendRequest.getFriends().get(1))).filter(Optional::isPresent).map(Optional::get).map(User::getId))
-                .map(data -> userRepository.getCommonFriends(data.getT1(), data.getT2()));
+                .map(data -> userRepository.getCommonFriends(data.getT1(), data.getT2()))
+                .map(p -> RetrieveFriendsListDto.Response.builder().friends(p).count(p.size()).success(true).build());
     }
 
     @Override
@@ -151,7 +147,7 @@ public class RelationServiceImpl implements RelationService {
     }
 
     @Override
-    public Mono<Set<String>> retrieveEmails(RetrieveEmailsListReceiveUpdateDto.Request retrieveRequest) {
+    public Mono<RetrieveEmailsListReceiveUpdateDto.Response> retrieveEmails(RetrieveEmailsListReceiveUpdateDto.Request retrieveRequest) {
         return findByEmail(retrieveRequest.getSender())
                 .filter(user -> user != null)
                 .switchIfEmpty(Mono.error(new DataNotFoundException(ErrorConstraints.EMAIL_NOT_FOUND)))
@@ -161,7 +157,9 @@ public class RelationServiceImpl implements RelationService {
                     emailList = userRepository.getEmailFromSet(emailList);
                     emailList.addAll(l);
                     return emailList;
-                });
+                })
+                .map(p -> RetrieveEmailsListReceiveUpdateDto.Response.builder().success(true).recipients(
+                p).build());
 
     }
 

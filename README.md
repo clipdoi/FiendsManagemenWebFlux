@@ -12,9 +12,9 @@
 4. ...
 
 ### Test coverage
-    Class: 77%
-    Method: 71%
-    Line: 75%
+    Class: 76%
+    Method: 67%
+    Line: 72%
 
 ### How to use from this sample project
 ##### Clone the repository
