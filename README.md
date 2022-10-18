@@ -50,7 +50,7 @@ https://www.postman.com/downloads/
     }
   Error Response Example
    {
-      "success": true
+      "success": false
    }
    ````
   -------------------------------------------------------------
