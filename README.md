@@ -33,9 +33,9 @@ docker-compose up --build
 https://www.postman.com/downloads/
 ```
 
-### RestApi Enpoints
+### RestApi Endpoints
 
-* Create a friend connection between two email addresses: http://localhost:8080/api/emails/add
+* Create a friend connection between two email addresses: http://localhost:8080/api/relation/add
  ````
   Example Request:
      {
@@ -55,7 +55,7 @@ https://www.postman.com/downloads/
    ````
   -------------------------------------------------------------
 
-* Retrieve the friends list for an email address: http://localhost:8080/api/emails/friends
+* Retrieve the friends list for an email address: http://localhost:8080/api/relation/friends
 ````
  Example Request:
     {
@@ -75,7 +75,7 @@ https://www.postman.com/downloads/
  ````
  -------------------------------------------------------------
 
-* Retrieve the common friends list between two email addresses: http://localhost:8080/api/emails/common
+* Retrieve the common friends list between two email addresses: http://localhost:8080/api/relation/common
  ````
   Example Request:
       {
@@ -96,7 +96,7 @@ https://www.postman.com/downloads/
   ````
   -------------------------------------------------------------
 
-* Subscribe to updates from an email address: http://localhost:8080/api/emails/subscribe
+* Subscribe to updates from an email address: http://localhost:8080/api/relation/subscribe
  ````
   Example Request:
         {
@@ -110,7 +110,7 @@ https://www.postman.com/downloads/
 
   -------------------------------------------------------------
 ````
-* Block updates from an email address(PUT method): http://localhost:8080/api/emails/block
+* Block updates from an email address(PUT method): http://localhost:8080/api/relation/block
 ````
   Example Request:
     {   
@@ -125,7 +125,7 @@ https://www.postman.com/downloads/
    ````
   -------------------------------------------------------------
 
-* Retrieve all email addresses that can receive updates from an email address: http://localhost:8080/api/emails/retrieve
+* Retrieve all email addresses that can receive updates from an email address: http://localhost:8080/api/relation/retrieve
 ````
   Example Request:
     {
